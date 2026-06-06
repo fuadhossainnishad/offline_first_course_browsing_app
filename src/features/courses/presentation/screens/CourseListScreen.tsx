@@ -9,7 +9,7 @@ import {
 } from "react-native";
 
 import { useCourseStore } from "../../store/useCourseStore";
-import CourseCard from "../components/CourseCard";
+import CourseCard, { TCourse } from "../components/CourseCard";
 import OfflineBanner from "../components/OfflineBanner";
 import CourseFilters from "../components/CourseFilters";
 
@@ -46,12 +46,12 @@ export default function CourseListScreen() {
     /**
      * RENDER ITEM (memo-friendly)
      */
-    const renderItem = useCallback(({ item }) => {
+    const renderItem = useCallback(({ item }: { item: TCourse }) => {
         return <CourseCard course={item} />;
     }, []);
 
     const keyExtractor = useCallback(
-        (item: any) => item.course_id,
+        (item: TCourse) => item.course_id,
         []
     );
 
@@ -102,8 +102,9 @@ export default function CourseListScreen() {
             </View>
 
             {/* FILTERS + SORT */}
-            <CourseFilters />
-
+            <View style={{ backgroundColor: "red" }}>
+                <CourseFilters />
+            </View>
             {/* LAST SYNC INFO */}
             {lastSynced && (
                 <Text className="px-3 text-xs text-gray-500">

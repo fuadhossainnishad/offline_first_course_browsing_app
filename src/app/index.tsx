@@ -20,6 +20,6 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   theme: {
-    backgroundColor: "#000000"
+    backgroundColor: "#ffffff"
   }
 })

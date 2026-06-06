@@ -10,24 +10,33 @@ export const getCourseById = async (id: string) => {
   ]);
 };
 
-export const updateEnrollment = async (courseId: string, enrolled: boolean) => {
-  await db.runAsync(
-    `
+export const updateEnrollment = async (
+  courseId: string,
+  enrolled: boolean
+) => {
+  try {
+    await db.runAsync(
+      `
       UPDATE courses
       SET is_enrolled = ?
       WHERE course_id = ?
     `,
-    [enrolled ? 1 : 0, courseId],
-  );
+      [enrolled ? 1 : 0, courseId]
+    );
+  } catch (error) {
+    console.log("ENROLLMENT UPDATE ERROR:", error);
+    throw error;
+  }
 };
 
 export const upsertCourse = async (course: any) => {
-  const existing = await getCourseById(course.course_id);
+  try {
+    const existing = await getCourseById(course.course_id);
 
-  const enrolled = (existing as any)?.is_enrolled ?? 0;
+    const enrolled = (existing as any)?.is_enrolled ?? 0;
 
-  await db.runAsync(
-    `
+    await db.runAsync(
+      `
       INSERT OR REPLACE INTO courses (
         course_id,
         title,
@@ -44,33 +53,32 @@ export const upsertCourse = async (course: any) => {
         is_enrolled
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    [
-      course.course_id,
-      course.title,
-      course.description_short,
-      course.instructor_id,
-      course.instructor_name,
-      course.instructor_expertise_level,
-      course.duration_weeks,
-      course.price_usd,
-      course.is_premium ? 1 : 0,
-      JSON.stringify(course.tags),
-      course.rating,
-      course.last_updated,
-      enrolled,
-    ],
-  );
+      `,
+      [
+        course.course_id,
+        course.title,
+        course.description_short,
+        course.instructor_id,
+        course.instructor_name,
+        course.instructor_expertise_level,
+        course.duration_weeks,
+        course.price_usd,
+        course.is_premium ? 1 : 0,
+        JSON.stringify(course.tags),
+        course.rating,
+        course.last_updated,
+        enrolled,
+      ]
+    );
+
+    console.log("Saved:", course.course_id);
+  } catch (error) {
+    console.error("UPSERT ERROR:", error);
+  }
 };
 
-export const queryCourses = async (filters: {
-  search?: string;
-  premium?: boolean;
-  enrolled?: boolean;
-  sortBy?: "rating" | "price" | "duration";
-}) => {
+export const queryCourses = async (filters: any) => {
   let query = `SELECT * FROM courses WHERE 1=1`;
-
   const params: any[] = [];
 
   if (filters.search) {
@@ -83,33 +91,33 @@ export const queryCourses = async (filters: {
     `;
 
     const search = `%${filters.search}%`;
-
     params.push(search, search, search);
   }
 
   if (filters.premium !== undefined) {
     query += ` AND is_premium = ?`;
-
     params.push(filters.premium ? 1 : 0);
   }
 
   if (filters.enrolled !== undefined) {
     query += ` AND is_enrolled = ?`;
-
     params.push(filters.enrolled ? 1 : 0);
   }
 
   if (filters.sortBy === "rating") {
     query += ` ORDER BY rating DESC`;
-  }
-
-  if (filters.sortBy === "price") {
+  } else if (filters.sortBy === "price") {
     query += ` ORDER BY price_usd ASC`;
-  }
-
-  if (filters.sortBy === "duration") {
+  } else if (filters.sortBy === "duration") {
     query += ` ORDER BY duration_weeks ASC`;
   }
 
-  return await db.getAllAsync(query, params);
+  const rows = await db.getAllAsync(query, params);
+
+  return rows.map((r: any) => ({
+    ...r,
+    is_premium: !!r.is_premium,
+    is_enrolled: !!r.is_enrolled,
+    tags: JSON.parse(r.tags || "[]"),
+  }));
 };

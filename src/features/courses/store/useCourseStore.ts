@@ -1,55 +1,47 @@
 import { create } from "zustand";
-
 import { CourseRepository } from "../data/repositories/courseRepository";
-import { useMemo } from "react";
 
-export interface CourseStore {
+export type SortBy = "rating" | "price" | "duration";
+
+export type Filters = {
+  search: string;
+  premium?: boolean;
+  enrolled?: boolean;
+  sortBy?: SortBy;
+};
+
+interface CourseStore {
   courses: any[];
-
   loading: boolean;
   refreshing: boolean;
   error: string | null;
 
-  lastSynced: string | null;
-
-  search: string;
-
-  premium?: boolean;
-  enrolled?: boolean;
-  sortBy?: "rating" | "price" | "duration";
+  filters: Filters;
 
   loadCourses: () => Promise<void>;
   refreshCourses: () => Promise<void>;
 
-  toggleEnrollment: (courseId: string, enrolled: boolean) => Promise<void>;
+  setFilters: (filters: Partial<Filters>) => void;
+  resetFilters: () => void;
 
-  setSearch: (value: string) => void;
-  setPremium: (value?: boolean) => void;
-  setEnrolled: (value?: boolean) => void;
-  setSortBy: (value?: "rating" | "price" | "duration") => void;
+  toggleEnrollment: (courseId: string, enrolled: boolean) => Promise<void>;
 }
 
 export const useCourseStore = create<CourseStore>((set, get) => {
-  const buildFilters = () => ({
-    search: get().search,
-    premium: get().premium,
-    enrolled: get().enrolled,
-    sortBy: get().sortBy,
-  });
+  const buildFilters = () => get().filters;
 
   return {
     courses: [],
-
     loading: false,
     refreshing: false,
     error: null,
 
-    lastSynced: null,
-
-    search: "",
-    premium: undefined,
-    enrolled: undefined,
-    sortBy: undefined,
+    filters: {
+      search: "",
+      premium: undefined,
+      enrolled: undefined,
+      sortBy: undefined,
+    },
 
     loadCourses: async () => {
       try {
@@ -57,22 +49,16 @@ export const useCourseStore = create<CourseStore>((set, get) => {
 
         const courses = await CourseRepository.getCourses(buildFilters());
 
-        set({
-          courses,
-          loading: false,
-        });
-      } catch (err) {
-        set({
-          loading: false,
-          error: "Failed to load courses",
-        });
+        set({ courses, loading: false });
+      } catch {
+        set({ loading: false, error: "Failed to load courses" });
       }
     },
 
     refreshCourses: async () => {
-      try {
-        set({ refreshing: true });
+      set({ refreshing: true });
 
+      try {
         await CourseRepository.refreshCourses();
 
         const courses = await CourseRepository.getCourses(buildFilters());
@@ -80,7 +66,6 @@ export const useCourseStore = create<CourseStore>((set, get) => {
         set({
           courses,
           refreshing: false,
-          lastSynced: new Date().toISOString(),
         });
       } catch {
         set({
@@ -90,28 +75,32 @@ export const useCourseStore = create<CourseStore>((set, get) => {
       }
     },
 
+    setFilters: (newFilters) => {
+      set((state) => ({
+        filters: {
+          ...state.filters,
+          ...newFilters,
+        },
+      }));
+    },
+
+    resetFilters: () => {
+      set({
+        filters: {
+          search: "",
+          premium: undefined,
+          enrolled: undefined,
+          sortBy: undefined,
+        },
+      });
+    },
+
     toggleEnrollment: async (courseId, enrolled) => {
       await CourseRepository.toggleEnrollment(courseId, enrolled);
 
       const courses = await CourseRepository.getCourses(buildFilters());
 
       set({ courses });
-    },
-
-    setSearch: (value) => {
-      set({ search: value });
-    },
-
-    setPremium: (value) => {
-      set({ premium: value });
-    },
-
-    setEnrolled: (value) => {
-      set({ enrolled: value });
-    },
-
-    setSortBy: (value) => {
-      set({ sortBy: value });
     },
   };
 });

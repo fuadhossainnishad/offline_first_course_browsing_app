@@ -1,9 +1,4 @@
-import {
-  getCourseById,
-  queryCourses,
-  updateEnrollment,
-} from "@/database/courseDao";
-
+import { updateEnrollment, queryCourses, getCourseById } from "@/database/courseDao";
 import { syncCourses } from "../sync/courseSyncService";
 
 export const CourseRepository = {
@@ -20,17 +15,17 @@ export const CourseRepository = {
   },
 
   async toggleEnrollment(courseId: string, enrolled: boolean) {
+    // 1. update local DB
     await updateEnrollment(courseId, enrolled);
+
+    // 2. return updated single course (NOT full query)
+    return getCourseById(courseId);
   },
 
   async loadInitialCourses(filters?: any) {
     const cached = await queryCourses(filters ?? {});
 
-    syncCourses()
-      .catch((err) => {
-        console.log("❌ SYNC FAILED:", err);
-      })
-      .finally(() => { });
+    syncCourses().catch(() => { });
 
     return cached;
   },

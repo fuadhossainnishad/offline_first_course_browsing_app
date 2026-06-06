@@ -1,51 +1,56 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { View, Text, FlatList, RefreshControl } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useCourseStore } from "@/features/courses/store/useCourseStore";
-import FilterChips from "@/components/FilterChips";
 import SearchBar from "@/components/SearchBar";
+import FilterChips from "@/components/FilterChips";
 import CourseCard from "@/features/courses/presentation/components/CourseCard";
-import { SafeAreaView } from "react-native-safe-area-context";
-import testSupabase from "@/test/testSupabase";
+import OfflineBanner from "@/features/courses/presentation/components/OfflineBanner";
 
 export default function AppScreen() {
     const {
         courses,
         loadCourses,
         refreshCourses,
-        setSearch,
         loading,
+        setFilters,
+        filters,
     } = useCourseStore();
 
-    const [filter, setFilter] = useState("All");
-
+    // initial load
     useEffect(() => {
         loadCourses();
-        testSupabase();
     }, []);
+
+    // debounce filter reload
+    useEffect(() => {
+        const t = setTimeout(() => {
+            loadCourses();
+        }, 250);
+
+        return () => clearTimeout(t);
+    }, [filters]);
 
     return (
         <SafeAreaView className="flex-1 bg-gray-50 px-4 pt-4">
 
-            {/* HEADER */}
-            <Text className="text-2xl font-bold text-gray-900">
-                Course Explorer
-            </Text>
-
+            <Text className="text-2xl font-bold">Course Explorer</Text>
             <Text className="text-sm text-gray-500 mb-4">
                 Learn. Build. Upgrade your skills.
             </Text>
 
+            <OfflineBanner />
+
             {/* SEARCH */}
             <SearchBar
-                onChange={(t) => {
-                    setSearch(t);
-                    loadCourses();
-                }}
+                onChange={(text) =>
+                    setFilters({ search: text })
+                }
             />
 
             {/* FILTERS */}
-            <FilterChips active={filter} onChange={setFilter} />
+            <FilterChips />
 
             {/* LIST */}
             <FlatList
@@ -55,9 +60,11 @@ export default function AppScreen() {
                     <CourseCard course={item} />
                 )}
                 refreshControl={
-                    <RefreshControl refreshing={loading} onRefresh={refreshCourses} />
+                    <RefreshControl
+                        refreshing={loading}
+                        onRefresh={refreshCourses}
+                    />
                 }
-                showsVerticalScrollIndicator={false}
             />
         </SafeAreaView>
     );

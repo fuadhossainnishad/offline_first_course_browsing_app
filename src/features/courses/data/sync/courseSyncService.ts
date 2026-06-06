@@ -1,5 +1,5 @@
 import { CourseRemoteDataSource } from "../remote/courseRemoteDataSource";
-import { upsertCourse } from "@/database/courseDao";
+import { upsertCourse, getCourses } from "@/database/courseDao";
 
 export const syncCourses = async () => {
   try {
@@ -14,10 +14,15 @@ export const syncCourses = async () => {
       await upsertCourse(course);
     }
 
+    const localCourses = await getCourses();
+
+    console.log("LOCAL SQLITE:", localCourses);
+
     console.log("SYNC COMPLETED");
+
     return true;
   } catch (error) {
     console.error("SYNC FAILED ❌", error);
-    throw error; // IMPORTANT: don't hide errors
+    throw error;
   }
 };

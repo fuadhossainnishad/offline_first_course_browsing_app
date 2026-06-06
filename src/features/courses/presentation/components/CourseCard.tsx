@@ -1,7 +1,8 @@
 import React from "react";
 import { Text, View, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 
-type Course = {
+export type TCourse = {
     course_id: string;
     title: string;
     instructor_name: string;
@@ -14,18 +15,20 @@ type Course = {
 
 export default function CourseCard({
     course,
-    onPress,
 }: {
-    course: Course;
-    onPress?: () => void;
+    course: TCourse;
 }) {
+    const router = useRouter();
     return (
         <Pressable
-            onPress={onPress}
+            onPress={() => router.push({
+                pathname: "/course/[id]",
+                params: { id: course.course_id },
+            })}
             className="bg-white rounded-2xl border border-gray-100 p-4 mb-3 active:scale-[0.98]"
         >
             {/* HEADER */}
-            <View className="flex-row justify-between items-start">
+            <View className="flex-row justify-between items-start" >
                 <View className="flex-1 pr-3">
                     <Text className="text-lg font-bold text-gray-900" numberOfLines={2}>
                         {course.title}
@@ -51,7 +54,7 @@ export default function CourseCard({
             </View>
 
             {/* META */}
-            <View className="flex-row justify-between mt-4">
+            <View className="flex-row justify-between mt-4" >
                 <Text className="text-xs text-gray-500">
                     ⏱ {course.duration_weeks} weeks
                 </Text>
@@ -60,12 +63,14 @@ export default function CourseCard({
                     ⭐ {course.rating}
                 </Text>
 
-                {course.is_enrolled && (
-                    <View className="bg-green-100 px-2 py-1 rounded-full">
-                        <Text className="text-xs text-green-700">Enrolled</Text>
-                    </View>
-                )}
+                {
+                    course.is_enrolled && (
+                        <View className="bg-green-100 px-2 py-1 rounded-full">
+                            <Text className="text-xs text-green-700">Enrolled</Text>
+                        </View>
+                    )
+                }
             </View>
-        </Pressable>
+        </Pressable >
     );
 }

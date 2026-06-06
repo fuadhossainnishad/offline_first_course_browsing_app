@@ -1,34 +1,224 @@
-# Welcome to your Expo app 👋
+# Offline First Course Browsing App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native (Expo) application that demonstrates an offline-first architecture for browsing, searching, filtering, and enrolling in courses. The app prioritizes local data access through SQLite while synchronizing course data from Supabase.
 
-## Get started
+## Features
 
-1. Install dependencies
+### Core Features
 
-   ```bash
-   npm install
-   ```
+* Browse available courses
+* Search courses by title, instructor, or tags
+* Filter courses:
 
-2. Start the app
+  * All
+  * Free
+  * Premium
+  * Enrolled
+* View course details
+* Enroll / Unenroll in courses
+* Pull-to-refresh synchronization
+* Offline-first experience
 
-   ```bash
-   npx expo start
-   ```
+### Offline-First Capabilities
 
-## Supabase Setup
+* SQLite used as the primary local data source
+* Cached courses available without internet access
+* Synchronization with Supabase when online
+* Enrollment state preserved locally
+* Offline status indicator
 
-1. Create a Supabase project.
-2. Create the `courses` table using the provided SQL schema.
-3. Insert sample records.
-4. Enable Row Level Security.
-5. Create a SELECT policy for anonymous users.
-6. Add environment variables:
+---
 
-EXPO_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_URL
+## Tech Stack
 
-EXPO_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+### Frontend
 
-The application uses Supabase as the remote source and SQLite as the local source of truth.
+* React Native
+* Expo
+* Expo Router
+* TypeScript
 
-Course enrollment status is stored locally and preserved during synchronization.
+### State Management
+
+* Zustand
+
+### Local Storage
+
+* Expo SQLite
+
+### Backend / Remote Data Source
+
+* Supabase
+
+### Styling
+
+* NativeWind (Tailwind CSS)
+
+---
+
+## Architecture
+
+The application follows a layered architecture:
+
+```text
+src/
+├── app/
+│   ├── _layout.tsx
+│   ├── index.tsx
+│   └── course/
+│       └── [id].tsx
+│
+├── features/
+│   └── courses/
+│       ├── data/
+│       │   ├── remote/
+│       │   ├── repositories/
+│       │   └── sync/
+│       │
+│       ├── presentation/
+│       │   ├── screens/
+│       │   └── components/
+│       │
+│       └── store/
+│
+├── database/
+│   ├── database.ts
+│   ├── init.ts
+│   └── courseDao.ts
+│
+└── lib/
+```
+
+Data Flow:
+
+```text
+UI
+ ↓
+Zustand Store
+ ↓
+Repository
+ ↓
+SQLite (Primary Source)
+ ↓
+Supabase Sync
+```
+
+---
+
+## Setup Instructions
+
+### 1. Clone Repository
+
+```bash
+git clone <repository-url>
+cd offline_first_course_browsing_app
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://dqbczltxrqbpwtgaplfl.supabase.co
+EXPO_PUBLIC_SUPABASE_KEY=sb_publishable_wlt3wdf011WryjquAVN5qA_L3sR_g70
+```
+
+You may also create an `.env.example` file:
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://dqbczltxrqbpwtgaplfl.supabase.co
+EXPO_PUBLIC_SUPABASE_KEY=sb_publishable_wlt3wdf011WryjquAVN5qA_L3sR_g70
+```
+
+### 4. Start Development Server
+
+```bash
+npx expo start
+```
+
+### 5. Run Android
+
+```bash
+npx expo run:android
+```
+
+---
+
+## Synchronization Strategy
+
+1. App loads data from SQLite immediately.
+2. User can browse courses offline.
+3. Manual refresh triggers synchronization.
+4. Latest courses are fetched from Supabase.
+5. SQLite cache is updated.
+6. Enrollment status is preserved locally.
+
+---
+
+## Design Decisions
+
+### Why SQLite?
+
+SQLite provides:
+
+* Fast local access
+* Offline support
+* Persistent storage
+* Better scalability than AsyncStorage for structured data
+
+### Why Zustand?
+
+* Lightweight
+* Minimal boilerplate
+* Excellent performance
+* Easy integration with React Native
+
+### Why Repository Pattern?
+
+* Separation of concerns
+* Testability
+* Clear data flow
+* Easier future backend changes
+
+---
+
+## Assumptions
+
+* Course catalog data is managed through Supabase.
+* Enrollment state is stored locally.
+* Sync conflicts are resolved by preserving local enrollment state.
+
+---
+
+## APK
+
+APK build can be downloaded from:
+
+https://drive.google.com/drive/folders/1LDza6dgYIR6JLq5r2Lw5_6eR9Zyg7ZVI?usp=sharing
+
+---
+
+## Future Improvements
+
+* Background synchronization
+* Sync queue for offline mutations
+* Unit tests
+* Integration tests
+* Pagination
+* Skeleton loading states
+* Advanced filtering
+* Automatic sync on reconnect
+
+---
+
+## Author
+
+Fuad Hossain
+
+React Native Developer
